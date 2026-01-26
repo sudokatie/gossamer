@@ -4,6 +4,22 @@ import * as path from "node:path";
 export async function createNewSite(name: string): Promise<void> {
   const dir = path.resolve(name);
   
+  try {
+    const stat = await fs.stat(dir);
+    if (stat.isDirectory()) {
+      const entries = await fs.readdir(dir);
+      if (entries.length > 0) {
+        throw new Error(`Directory "${name}" already exists and is not empty`);
+      }
+    } else {
+      throw new Error(`"${name}" already exists and is not a directory`);
+    }
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code !== "ENOENT") {
+      throw err;
+    }
+  }
+  
   await fs.mkdir(dir, { recursive: true });
   await fs.mkdir(path.join(dir, "posts"), { recursive: true });
   

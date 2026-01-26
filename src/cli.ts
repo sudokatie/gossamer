@@ -54,8 +54,13 @@ program
   .description("Create a new site")
   .argument("<name>", "Site name")
   .action(async (name: string) => {
-    const { createNewSite } = await import("./scaffold.js");
-    await createNewSite(name);
+    try {
+      const { createNewSite } = await import("./scaffold.js");
+      await createNewSite(name);
+    } catch (err) {
+      console.error("Failed to create site:", err instanceof Error ? err.message : err);
+      process.exit(1);
+    }
   });
 
 program.parse();

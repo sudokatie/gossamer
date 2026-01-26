@@ -75,9 +75,9 @@ async function processDirectory(
     } else if (entry.name.endsWith(".md")) {
       try {
         const layout = await loadLayoutForFile(sourcePath, inputRoot, rootLayout);
-        const page = await processMarkdownFile(sourcePath, relativePath, outputRoot, layout);
+        const page = await processMarkdownFile(sourcePath, relativePath, outputRoot, layout, includeDrafts);
         
-        if (page.data.draft && !includeDrafts) {
+        if (!page) {
           console.log(`  [skipped draft] ${relativePath}`);
           continue;
         }
@@ -98,9 +98,14 @@ async function processMarkdownFile(
   relativePath: string,
   outputRoot: string,
   layout: string,
-): Promise<Page> {
+  includeDrafts?: boolean,
+): Promise<Page | null> {
   const content = await fs.readFile(sourcePath, "utf-8");
   const parsed = parseMarkdown(content, relativePath);
+  
+  if (parsed.data.draft && !includeDrafts) {
+    return null;
+  }
   
   if (!parsed.data.date) {
     const dateFromFilename = extractDateFromFilename(path.basename(relativePath));

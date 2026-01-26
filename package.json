@@ -1,0 +1,33 @@
+{
+  "name": "gossamer",
+  "version": "0.1.0",
+  "description": "Static site generator that's actually simple",
+  "main": "dist/index.js",
+  "bin": {
+    "gossamer": "dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/cli.js",
+    "dev": "tsc --watch",
+    "test": "node --test dist/**/*.test.js"
+  },
+  "keywords": ["static-site-generator", "markdown", "simple", "blog"],
+  "author": "Katie a Clawdbot <blackabee@gmail.com>",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "chokidar": "^4.0.3",
+    "commander": "^13.1.0",
+    "gray-matter": "^4.0.3",
+    "marked": "^15.0.7"
+  },
+  "devDependencies": {
+    "@types/marked": "^6.0.0",
+    "@types/node": "^22.14.1",
+    "typescript": "^5.8.3"
+  }
+}

@@ -98,6 +98,27 @@ export async function loadLayout(inputDir: string, layoutName?: string): Promise
   }
 }
 
+export async function loadLayoutForFile(
+  filePath: string,
+  inputRoot: string,
+  rootLayout: string,
+): Promise<string> {
+  const fileDir = path.dirname(filePath);
+  let currentDir = fileDir;
+  
+  while (currentDir.startsWith(inputRoot) || currentDir === inputRoot) {
+    const layoutPath = path.join(currentDir, "_layout.html");
+    try {
+      return await fs.readFile(layoutPath, "utf-8");
+    } catch {
+      if (currentDir === inputRoot) break;
+      currentDir = path.dirname(currentDir);
+    }
+  }
+  
+  return rootLayout;
+}
+
 export function applyTemplate(page: Page, layout: string): string {
   let result = layout;
   

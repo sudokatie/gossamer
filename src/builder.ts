@@ -1,7 +1,7 @@
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import { parseMarkdown, extractDateFromFilename } from "./markdown.js";
-import { applyTemplate, loadLayout } from "./template.js";
+import { applyTemplate, loadLayout, loadLayoutForFile } from "./template.js";
 import { isStaticAsset, shouldIgnore, copyAssets } from "./assets.js";
 import { isPost, generatePostsIndex } from "./posts.js";
 import type { Page, SiteConfig, BuildResult } from "./types.js";
@@ -47,7 +47,7 @@ async function processDirectory(
   dir: string,
   inputRoot: string,
   outputRoot: string,
-  layout: string,
+  rootLayout: string,
   pages: Page[],
   errors: string[],
   includeDrafts?: boolean,
@@ -71,9 +71,10 @@ async function processDirectory(
     if (entry.isDirectory()) {
       const outDir = path.join(outputRoot, relativePath);
       await fs.mkdir(outDir, { recursive: true });
-      await processDirectory(sourcePath, inputRoot, outputRoot, layout, pages, errors, includeDrafts);
+      await processDirectory(sourcePath, inputRoot, outputRoot, rootLayout, pages, errors, includeDrafts);
     } else if (entry.name.endsWith(".md")) {
       try {
+        const layout = await loadLayoutForFile(sourcePath, inputRoot, rootLayout);
         const page = await processMarkdownFile(sourcePath, relativePath, outputRoot, layout);
         
         if (page.data.draft && !includeDrafts) {

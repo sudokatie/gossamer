@@ -13,6 +13,8 @@ const IGNORED_FILES = new Set([
   ".gitignore",
   ".git",
   "node_modules",
+  "dist",
+  "_site",
 ]);
 
 export function isStaticAsset(filename: string): boolean {

@@ -2,6 +2,11 @@ import { marked } from "marked";
 import matter from "gray-matter";
 import type { Page, PageData } from "./types.js";
 
+marked.setOptions({
+  gfm: true,
+  breaks: false,
+});
+
 export function parseMarkdown(content: string, sourcePath: string): Omit<Page, "outputPath"> {
   const { data, content: markdownContent } = matter(content);
   const pageData = data as PageData;

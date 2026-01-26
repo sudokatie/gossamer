@@ -27,7 +27,7 @@ node ../dist/cli.js serve
 
 ## Links
 
-- [About](/about) -- Learn more about this example
-- [Posts](/posts) -- Blog posts with dates
+- [About](about.html) -- Learn more about this example
+- [Posts](posts/) -- Blog posts with dates
 
 [^1]: Footnotes appear at the bottom of the page automatically.

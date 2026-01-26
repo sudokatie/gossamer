@@ -1,18 +1,14 @@
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import { parseMarkdown, extractDateFromFilename } from "./markdown.js";
-import { applyTemplate } from "./template.js";
+import { applyTemplate, loadLayout } from "./template.js";
+import { isStaticAsset, shouldIgnore, copyAssets } from "./assets.js";
+import { isPost, generatePostsIndex } from "./posts.js";
 import type { Page, SiteConfig, BuildResult } from "./types.js";
-
-const STATIC_EXTENSIONS = new Set([
-  ".css", ".js", ".jpg", ".jpeg", ".png", ".gif", ".svg", ".webp",
-  ".ico", ".woff", ".woff2", ".ttf", ".eot", ".pdf", ".mp3", ".mp4",
-]);
-
-const IGNORED_FILES = new Set([".DS_Store", "Thumbs.db", ".gitignore"]);
 
 export async function build(config: SiteConfig): Promise<BuildResult> {
   const startTime = performance.now();
+  const errors: string[] = [];
   
   const inputDir = path.resolve(config.inputDir);
   const outputDir = path.resolve(config.outputDir);
@@ -20,29 +16,29 @@ export async function build(config: SiteConfig): Promise<BuildResult> {
   await fs.rm(outputDir, { recursive: true, force: true });
   await fs.mkdir(outputDir, { recursive: true });
   
-  let customLayout: string | undefined;
-  const layoutPath = path.join(inputDir, "_layout.html");
-  try {
-    customLayout = await fs.readFile(layoutPath, "utf-8");
-  } catch {
-    // no custom layout, use default
-  }
-  
+  const layout = await loadLayout(inputDir);
   const pages: Page[] = [];
-  const assetCount = { value: 0 };
   
-  await processDirectory(inputDir, inputDir, outputDir, customLayout, pages, assetCount);
+  await processDirectory(inputDir, inputDir, outputDir, layout, pages, errors, config.drafts);
   
-  const posts = pages.filter(p => p.sourcePath.includes("/posts/") && !p.sourcePath.endsWith("_index.md"));
+  const posts = pages.filter(p => isPost(p) && !p.sourcePath.endsWith("_index.md"));
   if (posts.length > 0) {
-    await generatePostsIndex(posts, outputDir, customLayout);
+    const postsIndexHtml = generatePostsIndex(posts, layout);
+    const postsIndexPath = path.join(outputDir, "posts", "index.html");
+    await fs.mkdir(path.dirname(postsIndexPath), { recursive: true });
+    await fs.writeFile(postsIndexPath, postsIndexHtml);
+    console.log("  [generated] posts/index.html");
   }
+  
+  console.log("Copying assets...");
+  const assetCount = await copyAssets(inputDir, outputDir);
   
   const endTime = performance.now();
   
   return {
     pages: pages.length,
-    assets: assetCount.value,
+    assets: assetCount,
+    errors,
     timeMs: Math.round(endTime - startTime),
   };
 }
@@ -51,16 +47,23 @@ async function processDirectory(
   dir: string,
   inputRoot: string,
   outputRoot: string,
-  customLayout: string | undefined,
+  layout: string,
   pages: Page[],
-  assetCount: { value: number },
+  errors: string[],
+  includeDrafts?: boolean,
 ): Promise<void> {
-  const entries = await fs.readdir(dir, { withFileTypes: true });
+  let entries;
+  try {
+    entries = await fs.readdir(dir, { withFileTypes: true });
+  } catch (err) {
+    errors.push(`Failed to read directory: ${dir}`);
+    return;
+  }
   
-  for (const entry of entries) {
-    if (entry.name.startsWith("_") || IGNORED_FILES.has(entry.name)) {
-      continue;
-    }
+  const sortedEntries = entries.sort((a, b) => a.name.localeCompare(b.name));
+  
+  for (const entry of sortedEntries) {
+    if (shouldIgnore(entry.name)) continue;
     
     const sourcePath = path.join(dir, entry.name);
     const relativePath = path.relative(inputRoot, sourcePath);
@@ -68,17 +71,23 @@ async function processDirectory(
     if (entry.isDirectory()) {
       const outDir = path.join(outputRoot, relativePath);
       await fs.mkdir(outDir, { recursive: true });
-      await processDirectory(sourcePath, inputRoot, outputRoot, customLayout, pages, assetCount);
+      await processDirectory(sourcePath, inputRoot, outputRoot, layout, pages, errors, includeDrafts);
     } else if (entry.name.endsWith(".md")) {
-      const page = await processMarkdownFile(sourcePath, relativePath, outputRoot, customLayout);
-      pages.push(page);
-      console.log(`  ${relativePath} -> ${page.outputPath}`);
-    } else if (STATIC_EXTENSIONS.has(path.extname(entry.name).toLowerCase())) {
-      const outPath = path.join(outputRoot, relativePath);
-      await fs.mkdir(path.dirname(outPath), { recursive: true });
-      await fs.copyFile(sourcePath, outPath);
-      assetCount.value++;
-      console.log(`  [copied] ${relativePath}`);
+      try {
+        const page = await processMarkdownFile(sourcePath, relativePath, outputRoot, layout);
+        
+        if (page.data.draft && !includeDrafts) {
+          console.log(`  [skipped draft] ${relativePath}`);
+          continue;
+        }
+        
+        pages.push(page);
+        console.log(`  ${relativePath} -> ${page.outputPath}`);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        errors.push(`Failed to process ${relativePath}: ${message}`);
+        console.error(`  [error] ${relativePath}: ${message}`);
+      }
     }
   }
 }
@@ -87,7 +96,7 @@ async function processMarkdownFile(
   sourcePath: string,
   relativePath: string,
   outputRoot: string,
-  customLayout: string | undefined,
+  layout: string,
 ): Promise<Page> {
   const content = await fs.readFile(sourcePath, "utf-8");
   const parsed = parseMarkdown(content, relativePath);
@@ -99,7 +108,14 @@ async function processMarkdownFile(
     }
   }
   
-  const outputRelative = relativePath.replace(/\.md$/, ".html").replace(/^\d{4}-\d{2}-\d{2}-/, "");
+  let outputRelative = relativePath
+    .replace(/\.md$/, ".html")
+    .replace(/\/\d{4}-\d{2}-\d{2}-/, "/");
+  
+  if (outputRelative.match(/^\d{4}-\d{2}-\d{2}-/)) {
+    outputRelative = outputRelative.replace(/^\d{4}-\d{2}-\d{2}-/, "");
+  }
+  
   const outputPath = path.join(outputRoot, outputRelative);
   
   const page: Page = {
@@ -107,44 +123,10 @@ async function processMarkdownFile(
     outputPath: outputRelative,
   };
   
-  const html = applyTemplate(page, customLayout);
+  const html = applyTemplate(page, layout);
   
   await fs.mkdir(path.dirname(outputPath), { recursive: true });
   await fs.writeFile(outputPath, html);
   
   return page;
-}
-
-async function generatePostsIndex(
-  posts: Page[],
-  outputRoot: string,
-  customLayout: string | undefined,
-): Promise<void> {
-  const sorted = [...posts].sort((a, b) => {
-    const dateA = a.data.date || "";
-    const dateB = b.data.date || "";
-    return dateB.localeCompare(dateA);
-  });
-  
-  const listHtml = sorted.map(post => {
-    const href = "/" + post.outputPath;
-    const date = post.data.date ? `<span class="date">${post.data.date}</span>` : "";
-    return `<li>${date} <a href="${href}">${post.data.title}</a></li>`;
-  }).join("\n");
-  
-  const indexPage: Page = {
-    sourcePath: "posts/_index.md",
-    outputPath: "posts/index.html",
-    slug: "posts",
-    content: "",
-    html: `<h1>Posts</h1>\n<ul>\n${listHtml}\n</ul>`,
-    data: { title: "Posts" },
-  };
-  
-  const html = applyTemplate(indexPage, customLayout);
-  const outputPath = path.join(outputRoot, "posts", "index.html");
-  await fs.mkdir(path.dirname(outputPath), { recursive: true });
-  await fs.writeFile(outputPath, html);
-  
-  console.log("  [generated] posts/index.html");
 }

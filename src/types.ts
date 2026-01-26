@@ -1,6 +1,7 @@
 export interface PageData {
   title: string;
   date?: string;
+  draft?: boolean;
   layout?: string;
   [key: string]: unknown;
 }
@@ -17,11 +18,17 @@ export interface Page {
 export interface SiteConfig {
   inputDir: string;
   outputDir: string;
-  layoutFile?: string;
+  drafts?: boolean;
 }
 
 export interface BuildResult {
   pages: number;
   assets: number;
+  errors: string[];
   timeMs: number;
+}
+
+export interface ServerConfig extends SiteConfig {
+  port: number;
+  open?: boolean;
 }

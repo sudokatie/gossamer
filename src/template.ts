@@ -1,3 +1,5 @@
+import * as fs from "node:fs/promises";
+import * as path from "node:path";
 import type { Page } from "./types.js";
 
 const DEFAULT_LAYOUT = `<!DOCTYPE html>
@@ -38,10 +40,13 @@ const DEFAULT_LAYOUT = `<!DOCTYPE html>
     h1, h2, h3, h4 { margin: 1.5em 0 0.5em; line-height: 1.3; }
     h1 { font-size: 2rem; }
     h2 { font-size: 1.5rem; }
-    p, ul, ol, pre, blockquote { margin: 1em 0; }
+    h3 { font-size: 1.25rem; }
+    p, ul, ol, pre, blockquote, table { margin: 1em 0; }
+    ul, ol { padding-left: 1.5em; }
     a { color: var(--accent); }
+    a:hover { text-decoration: none; }
     code {
-      font-family: "SF Mono", Consolas, monospace;
+      font-family: "SF Mono", Monaco, Consolas, monospace;
       font-size: 0.9em;
       background: rgba(128,128,128,0.1);
       padding: 0.1em 0.3em;
@@ -58,8 +63,21 @@ const DEFAULT_LAYOUT = `<!DOCTYPE html>
       border-left: 3px solid var(--accent);
       padding-left: 1em;
       color: var(--muted);
+      font-style: italic;
     }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+    th, td {
+      border: 1px solid rgba(128,128,128,0.3);
+      padding: 0.5em 0.75em;
+      text-align: left;
+    }
+    th { background: rgba(128,128,128,0.1); }
+    img { max-width: 100%; height: auto; }
     .date { color: var(--muted); font-size: 0.9em; }
+    hr { border: none; border-top: 1px solid rgba(128,128,128,0.3); margin: 2em 0; }
   </style>
 </head>
 <body>
@@ -69,9 +87,18 @@ const DEFAULT_LAYOUT = `<!DOCTYPE html>
 </body>
 </html>`;
 
-export function applyTemplate(page: Page, customLayout?: string): string {
-  const layout = customLayout || DEFAULT_LAYOUT;
+export async function loadLayout(inputDir: string, layoutName?: string): Promise<string> {
+  const layoutFile = layoutName || "_layout.html";
+  const layoutPath = path.join(inputDir, layoutFile);
   
+  try {
+    return await fs.readFile(layoutPath, "utf-8");
+  } catch {
+    return DEFAULT_LAYOUT;
+  }
+}
+
+export function applyTemplate(page: Page, layout: string): string {
   let result = layout;
   
   result = result.replace(/\{\{content\}\}/g, page.html);

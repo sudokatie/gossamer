@@ -19,12 +19,22 @@ export async function loadConfig(cliOptions: Partial<SiteConfig>): Promise<SiteC
   try {
     const fileContent = await fs.readFile(configPath, "utf-8");
     const fileConfig = JSON.parse(fileContent) as Partial<SiteConfig>;
-    Object.assign(config, fileConfig);
+    // Only merge defined values from file config
+    for (const [key, value] of Object.entries(fileConfig)) {
+      if (value !== undefined) {
+        (config as Record<string, unknown>)[key] = value;
+      }
+    }
   } catch {
     // No config file, use defaults
   }
   
-  Object.assign(config, cliOptions);
+  // Only merge defined values from CLI options
+  for (const [key, value] of Object.entries(cliOptions)) {
+    if (value !== undefined) {
+      (config as Record<string, unknown>)[key] = value;
+    }
+  }
   
   config.inputDir = path.resolve(config.inputDir);
   config.outputDir = path.resolve(config.outputDir);

@@ -2,6 +2,8 @@
 
 Static site generator that's actually simple. Zero JS by default, builds in milliseconds.
 
+**[Live Example](https://blackabee.com/apps/gossamer/example/)** - See what Gossamer outputs
+
 ## Install
 
 ```bash

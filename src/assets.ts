@@ -24,7 +24,8 @@ export function isStaticAsset(filename: string): boolean {
 
 export function shouldIgnore(filename: string): boolean {
   if (filename.startsWith(".")) return true;
-  if (filename.startsWith("_")) return true;
+  // Allow _index.md for custom index pages, ignore other underscore files
+  if (filename.startsWith("_") && filename !== "_index.md") return true;
   if (IGNORED_FILES.has(filename)) return true;
   return false;
 }

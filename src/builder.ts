@@ -22,7 +22,10 @@ export async function build(config: SiteConfig): Promise<BuildResult> {
   await processDirectory(inputDir, inputDir, outputDir, layout, pages, errors, config.drafts);
   
   const posts = pages.filter(p => isPost(p) && !p.sourcePath.endsWith("_index.md"));
-  if (posts.length > 0) {
+  const customPostsIndex = pages.find(p => p.sourcePath === "posts/_index.md" || p.sourcePath.endsWith("/posts/_index.md"));
+  
+  if (posts.length > 0 && !customPostsIndex) {
+    // Only generate posts index if there's no custom _index.md
     const postsIndexHtml = generatePostsIndex(posts, layout);
     const postsIndexPath = path.join(outputDir, "posts", "index.html");
     await fs.mkdir(path.dirname(postsIndexPath), { recursive: true });
@@ -74,8 +77,7 @@ async function processDirectory(
       await processDirectory(sourcePath, inputRoot, outputRoot, rootLayout, pages, errors, includeDrafts);
     } else if (entry.name.endsWith(".md")) {
       try {
-        const layout = await loadLayoutForFile(sourcePath, inputRoot, rootLayout);
-        const page = await processMarkdownFile(sourcePath, relativePath, outputRoot, layout, includeDrafts);
+        const page = await processMarkdownFile(sourcePath, relativePath, inputRoot, outputRoot, rootLayout, includeDrafts);
         
         if (!page) {
           console.log(`  [skipped draft] ${relativePath}`);
@@ -96,8 +98,9 @@ async function processDirectory(
 async function processMarkdownFile(
   sourcePath: string,
   relativePath: string,
+  inputRoot: string,
   outputRoot: string,
-  layout: string,
+  rootLayout: string,
   includeDrafts?: boolean,
 ): Promise<Page | null> {
   const content = await fs.readFile(sourcePath, "utf-8");
@@ -114,9 +117,18 @@ async function processMarkdownFile(
     }
   }
   
+  // Load layout: front matter layout > directory layout > root layout
+  let layout: string;
+  if (parsed.data.layout) {
+    layout = await loadLayout(inputRoot, parsed.data.layout);
+  } else {
+    layout = await loadLayoutForFile(sourcePath, inputRoot, rootLayout);
+  }
+  
   let outputRelative = relativePath
     .replace(/\.md$/, ".html")
-    .replace(/\/\d{4}-\d{2}-\d{2}-/, "/");
+    .replace(/\/\d{4}-\d{2}-\d{2}-/, "/")
+    .replace(/_index\.html$/, "index.html");  // _index.md -> index.html
   
   if (outputRelative.match(/^\d{4}-\d{2}-\d{2}-/)) {
     outputRelative = outputRelative.replace(/^\d{4}-\d{2}-\d{2}-/, "");

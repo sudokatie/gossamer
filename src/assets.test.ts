@@ -57,6 +57,10 @@ describe("shouldIgnore", () => {
     assert.strictEqual(shouldIgnore("_draft.md"), true);
   });
 
+  it("allows _index.md for custom index pages", () => {
+    assert.strictEqual(shouldIgnore("_index.md"), false);
+  });
+
   it("ignores node_modules", () => {
     assert.strictEqual(shouldIgnore("node_modules"), true);
   });

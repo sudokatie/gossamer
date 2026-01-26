@@ -189,4 +189,38 @@ describe("build", () => {
     const oldExists = await fs.stat(path.join(outputDir, "old-file.html")).then(() => true).catch(() => false);
     assert.ok(!oldExists);
   });
+
+  it("uses layout from front matter", async () => {
+    await fs.writeFile(
+      path.join(inputDir, "custom.html"),
+      "<html>CUSTOM-LAYOUT:{{content}}</html>"
+    );
+    await fs.writeFile(
+      path.join(inputDir, "page.md"),
+      "---\ntitle: Test\nlayout: custom.html\n---\n\n# Hello"
+    );
+
+    await build({ inputDir, outputDir });
+
+    const output = await fs.readFile(path.join(outputDir, "page.html"), "utf-8");
+    assert.ok(output.includes("CUSTOM-LAYOUT:"));
+  });
+
+  it("uses custom _index.md for posts instead of generated index", async () => {
+    await fs.mkdir(path.join(inputDir, "posts"), { recursive: true });
+    await fs.writeFile(
+      path.join(inputDir, "posts", "_index.md"),
+      "---\ntitle: My Blog\n---\n\n# Custom Posts Index\n\nThis is my custom index."
+    );
+    await fs.writeFile(
+      path.join(inputDir, "posts", "2024-01-15-hello.md"),
+      "---\ntitle: Hello\ndate: \"2024-01-15\"\n---\n\n# Hello"
+    );
+
+    await build({ inputDir, outputDir });
+
+    const indexContent = await fs.readFile(path.join(outputDir, "posts", "index.html"), "utf-8");
+    assert.ok(indexContent.includes("Custom Posts Index"));
+    assert.ok(!indexContent.includes("[generated]"));
+  });
 });

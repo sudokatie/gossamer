@@ -5,10 +5,16 @@ export function isPost(page: Page): boolean {
   return page.sourcePath.includes("/posts/") || page.sourcePath.startsWith("posts/");
 }
 
+function normalizeDate(date: unknown): string {
+  if (!date) return "0000-00-00";
+  if (date instanceof Date) return date.toISOString().slice(0, 10);
+  return String(date);
+}
+
 export function sortPosts(posts: Page[]): Page[] {
   return [...posts].sort((a, b) => {
-    const dateA = a.data.date || "0000-00-00";
-    const dateB = b.data.date || "0000-00-00";
+    const dateA = normalizeDate(a.data.date);
+    const dateB = normalizeDate(b.data.date);
     return dateB.localeCompare(dateA);
   });
 }
@@ -18,8 +24,9 @@ export function generatePostsIndex(posts: Page[], layout: string): string {
   
   const listItems = sorted.map(post => {
     const href = "/" + post.outputPath;
-    const date = post.data.date 
-      ? `<span class="date">${post.data.date}</span> ` 
+    const dateStr = normalizeDate(post.data.date);
+    const date = dateStr !== "0000-00-00"
+      ? `<span class="date">${dateStr}</span> ` 
       : "";
     return `<li>${date}<a href="${href}">${post.data.title}</a></li>`;
   });

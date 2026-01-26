@@ -184,23 +184,23 @@ describe("applyTemplate", () => {
 });
 
 describe("getDefaultLayout", () => {
-  it("returns valid HTML", () => {
-    const layout = getDefaultLayout();
+  it("returns valid HTML", async () => {
+    const layout = await getDefaultLayout();
     
     assert.ok(layout.includes("<!DOCTYPE html>"));
     assert.ok(layout.includes("<html"));
     assert.ok(layout.includes("</html>"));
   });
 
-  it("contains required placeholders", () => {
-    const layout = getDefaultLayout();
+  it("contains required placeholders", async () => {
+    const layout = await getDefaultLayout();
     
     assert.ok(layout.includes("{{title}}"));
     assert.ok(layout.includes("{{content}}"));
   });
 
-  it("includes dark mode support", () => {
-    const layout = getDefaultLayout();
+  it("includes dark mode support", async () => {
+    const layout = await getDefaultLayout();
     
     assert.ok(layout.includes("prefers-color-scheme: dark"));
   });

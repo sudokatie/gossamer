@@ -78,6 +78,38 @@ Some content.`;
   });
 });
 
+describe("markdown extensions", () => {
+  it("renders footnotes", () => {
+    const content = `Here is a footnote reference[^1].
+
+[^1]: Here is the footnote content.`;
+
+    const result = parseMarkdown(content, "test.md");
+    
+    assert.ok(result.html.includes("footnote"));
+    assert.ok(result.html.includes("Here is the footnote content"));
+  });
+
+  it("applies smart typography", () => {
+    const content = `"Hello" -- she said... It's nice.`;
+
+    const result = parseMarkdown(content, "test.md");
+    
+    // Smartypants uses HTML entities: &#8220; (left quote), &#8221; (right quote), &#8217; (apostrophe)
+    assert.ok(result.html.includes("&#8220;") || result.html.includes("\u201C")); // Left double quote
+    assert.ok(result.html.includes("&#8217;") || result.html.includes("\u2019")); // Apostrophe
+    assert.ok(result.html.includes("&#8230;") || result.html.includes("\u2026")); // Ellipsis
+  });
+
+  it("renders strikethrough", () => {
+    const content = `This is ~~deleted~~ text.`;
+
+    const result = parseMarkdown(content, "test.md");
+    
+    assert.ok(result.html.includes("<del>") || result.html.includes("~~"));
+  });
+});
+
 describe("extractDateFromFilename", () => {
   it("extracts YYYY-MM-DD date", () => {
     assert.strictEqual(extractDateFromFilename("2024-01-15-hello.md"), "2024-01-15");

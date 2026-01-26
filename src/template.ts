@@ -1,91 +1,53 @@
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
+import { fileURLToPath } from "node:url";
 import type { Page } from "./types.js";
 
-const DEFAULT_LAYOUT = `<!DOCTYPE html>
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+let cachedDefaultLayout: string | null = null;
+
+async function loadDefaultLayout(): Promise<string> {
+  if (cachedDefaultLayout) return cachedDefaultLayout;
+  
+  const templatePath = path.resolve(__dirname, "..", "templates", "default.html");
+  try {
+    cachedDefaultLayout = await fs.readFile(templatePath, "utf-8");
+    return cachedDefaultLayout;
+  } catch {
+    cachedDefaultLayout = getFallbackLayout();
+    return cachedDefaultLayout;
+  }
+}
+
+function getFallbackLayout(): string {
+  return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{title}}</title>
   <style>
-    :root {
-      --text: #222;
-      --bg: #fff;
-      --accent: #0066cc;
-      --muted: #666;
-      --max-width: 42rem;
-    }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --text: #e0e0e0;
-        --bg: #1a1a1a;
-        --accent: #6db3f2;
-        --muted: #999;
-      }
-    }
+    :root { --text: #222; --bg: #fff; --accent: #0066cc; --muted: #666; --max-width: 42rem; }
+    @media (prefers-color-scheme: dark) { :root { --text: #e0e0e0; --bg: #1a1a1a; --accent: #6db3f2; --muted: #999; } }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      font-size: 18px;
-      line-height: 1.6;
-      color: var(--text);
-      background: var(--bg);
-      padding: 2rem 1rem;
-    }
-    main {
-      max-width: var(--max-width);
-      margin: 0 auto;
-    }
+    body { font-family: system-ui, sans-serif; font-size: 18px; line-height: 1.6; color: var(--text); background: var(--bg); padding: 2rem 1rem; }
+    main { max-width: var(--max-width); margin: 0 auto; }
     h1, h2, h3, h4 { margin: 1.5em 0 0.5em; line-height: 1.3; }
-    h1 { font-size: 2rem; }
-    h2 { font-size: 1.5rem; }
-    h3 { font-size: 1.25rem; }
     p, ul, ol, pre, blockquote, table { margin: 1em 0; }
-    ul, ol { padding-left: 1.5em; }
     a { color: var(--accent); }
-    a:hover { text-decoration: none; }
-    code {
-      font-family: "SF Mono", Monaco, Consolas, monospace;
-      font-size: 0.9em;
-      background: rgba(128,128,128,0.1);
-      padding: 0.1em 0.3em;
-      border-radius: 3px;
-    }
-    pre {
-      background: rgba(128,128,128,0.1);
-      padding: 1em;
-      overflow-x: auto;
-      border-radius: 4px;
-    }
+    code { font-family: monospace; background: rgba(128,128,128,0.1); padding: 0.1em 0.3em; border-radius: 3px; }
+    pre { background: rgba(128,128,128,0.1); padding: 1em; overflow-x: auto; }
     pre code { background: none; padding: 0; }
-    blockquote {
-      border-left: 3px solid var(--accent);
-      padding-left: 1em;
-      color: var(--muted);
-      font-style: italic;
-    }
-    table {
-      border-collapse: collapse;
-      width: 100%;
-    }
-    th, td {
-      border: 1px solid rgba(128,128,128,0.3);
-      padding: 0.5em 0.75em;
-      text-align: left;
-    }
-    th { background: rgba(128,128,128,0.1); }
-    img { max-width: 100%; height: auto; }
-    .date { color: var(--muted); font-size: 0.9em; }
-    hr { border: none; border-top: 1px solid rgba(128,128,128,0.3); margin: 2em 0; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid rgba(128,128,128,0.3); padding: 0.5em 0.75em; text-align: left; }
+    .footnotes { margin-top: 3em; padding-top: 1em; border-top: 1px solid rgba(128,128,128,0.3); font-size: 0.9em; }
   </style>
 </head>
-<body>
-  <main>
-    {{content}}
-  </main>
-</body>
+<body><main>{{content}}</main></body>
 </html>`;
+}
 
 export async function loadLayout(inputDir: string, layoutName?: string): Promise<string> {
   const layoutFile = layoutName || "_layout.html";
@@ -94,7 +56,7 @@ export async function loadLayout(inputDir: string, layoutName?: string): Promise
   try {
     return await fs.readFile(layoutPath, "utf-8");
   } catch {
-    return DEFAULT_LAYOUT;
+    return await loadDefaultLayout();
   }
 }
 
@@ -141,6 +103,6 @@ export function applyTemplate(page: Page, layout: string): string {
   return result;
 }
 
-export function getDefaultLayout(): string {
-  return DEFAULT_LAYOUT;
+export async function getDefaultLayout(): Promise<string> {
+  return await loadDefaultLayout();
 }

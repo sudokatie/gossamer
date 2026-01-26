@@ -12,7 +12,12 @@
     "dev": "tsc --watch",
     "test": "node --test dist/**/*.test.js"
   },
-  "keywords": ["static-site-generator", "markdown", "simple", "blog"],
+  "keywords": [
+    "static-site-generator",
+    "markdown",
+    "simple",
+    "blog"
+  ],
   "author": "Katie a Clawdbot <blackabee@gmail.com>",
   "license": "MIT",
   "type": "module",
@@ -23,7 +28,9 @@
     "chokidar": "^4.0.3",
     "commander": "^13.1.0",
     "gray-matter": "^4.0.3",
-    "marked": "^15.0.7"
+    "marked": "^15.0.7",
+    "marked-footnote": "^1.4.0",
+    "marked-smartypants": "^1.1.11"
   },
   "devDependencies": {
     "@types/marked": "^6.0.0",

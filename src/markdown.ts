@@ -1,7 +1,11 @@
 import { marked } from "marked";
+import markedFootnote from "marked-footnote";
+import { markedSmartypants } from "marked-smartypants";
 import matter from "gray-matter";
 import type { Page, PageData } from "./types.js";
 
+marked.use(markedFootnote());
+marked.use(markedSmartypants());
 marked.setOptions({
   gfm: true,
   breaks: false,

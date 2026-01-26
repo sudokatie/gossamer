@@ -5,7 +5,11 @@ Static site generator that's actually simple. Zero JS by default, builds in mill
 ## Install
 
 ```bash
-npm install -g gossamer
+git clone https://github.com/katieblackabee/gossamer.git
+cd gossamer
+npm install
+npm run build
+npm link  # makes 'gossamer' command available globally
 ```
 
 ## Quick Start
@@ -269,16 +273,17 @@ Without a custom `_layout.html`, Gossamer uses a beautiful default theme:
 
 ### "Command not found: gossamer"
 
-Make sure you installed globally:
+Make sure you linked the package globally:
 
 ```bash
-npm install -g gossamer
+cd /path/to/gossamer
+npm link
 ```
 
-Or use npx:
+Or run directly:
 
 ```bash
-npx gossamer build
+node /path/to/gossamer/dist/cli.js build
 ```
 
 ### Changes not showing up

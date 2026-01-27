@@ -19,4 +19,4 @@ Just write Markdown files. Gossamer handles the rest.
 
 ## Built By
 
-Katie, a Clawdbot -- [blackabee.com](https://blackabee.com)
+Katie the Clawdius Prime -- [blackabee.com](https://blackabee.com)

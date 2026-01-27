@@ -1,8 +1,14 @@
 # Gossamer
 
-Static site generator that's actually simple. Zero JS by default, builds in milliseconds.
+Static site generator that's actually simple. Zero JavaScript by default. Builds in milliseconds, not the heat death of the universe.
 
-**[Live Example](https://blackabee.com/apps/gossamer/example/)** - See what Gossamer outputs
+**[Live Example](https://blackabee.com/apps/gossamer/example/)** - See what it outputs
+
+## Why Another Static Site Generator?
+
+Because Gatsby has 1,847 dependencies. Because Next.js wants to be everything to everyone. Because Hugo's templating language was designed by someone who hates joy.
+
+Gossamer does one thing: turns markdown into HTML. It does this quickly, with sensible defaults, and without requiring a PhD in configuration file syntax.
 
 ## Install
 
@@ -28,14 +34,13 @@ gossamer build
 gossamer serve
 ```
 
+That's it. You now have a website. No 47-step configuration process. No YAML files that are longer than your actual content.
+
 ## CLI Commands
 
 ### `gossamer new <directory>`
 
-Creates a new site with starter files:
-- `index.md` - Homepage
-- `about.md` - About page
-- `posts/` - Blog posts directory with example post
+Creates a new site with starter files. Includes an index page, about page, and a sample blog post so you're not staring at an empty folder wondering what to do next.
 
 ```bash
 gossamer new my-blog
@@ -43,7 +48,7 @@ gossamer new my-blog
 
 ### `gossamer build [directory]`
 
-Builds your site to `_site/` (or custom output with `--output`).
+Builds your site to `_site/` (or wherever you want with `--output`).
 
 ```bash
 # Build current directory
@@ -56,31 +61,26 @@ gossamer build ./my-site
 gossamer build --output ./public
 ```
 
-**Options:**
-- `-o, --output <dir>` - Output directory (default: `_site`)
-
 ### `gossamer serve [directory]`
 
-Starts a development server with file watching. Rebuilds automatically on changes.
+Starts a development server that actually watches for changes and rebuilds. Like magic, except it's just filesystem events.
 
 ```bash
 # Serve current directory
 gossamer serve
 
-# Custom port
+# Custom port for the commitment-phobic
 gossamer serve --port 8080
 ```
 
-**Options:**
-- `-p, --port <number>` - Server port (default: `3000`)
-- `-o, --output <dir>` - Output directory (default: `_site`)
-
 ## How It Works
 
-1. Markdown files (`.md`) are converted to HTML
-2. Static assets (CSS, JS, images) are copied as-is
-3. The default layout (or your custom `_layout.html`) wraps each page
-4. Posts in `posts/` get a generated index page
+1. Markdown files (`.md`) become HTML
+2. Static assets (CSS, JS, images) get copied as-is
+3. Your layout wraps each page (or you use the beautiful default)
+4. Posts in `posts/` get a generated index
+
+No build plugins. No middleware. No "ecosystem." Just files in, files out.
 
 ### File Structure
 
@@ -107,7 +107,7 @@ Files starting with `.` or `_` are ignored:
 
 ## Front Matter
 
-Add YAML front matter to your markdown files:
+Add YAML at the top of your markdown files like a normal person:
 
 ```markdown
 ---
@@ -124,21 +124,11 @@ draft: true
 
 | Field | Description |
 |-------|-------------|
-| `title` | Page title (auto-extracted from first H1 if not set) |
-| `date` | Publication date (YYYY-MM-DD format) |
-| `draft` | If `true`, page is skipped during build |
+| `title` | Page title (auto-extracted from first H1 if you're lazy) |
+| `date` | Publication date (YYYY-MM-DD) |
+| `draft` | If `true`, the page won't be built. Procrastination, codified. |
 | `layout` | Custom layout file (future feature) |
-| *custom* | Any field can be used in templates |
-
-### Date in Filename
-
-Posts can have dates in their filename:
-
-```
-posts/2024-01-15-hello-world.md
-```
-
-This becomes `/posts/hello-world.html` with date `2024-01-15`.
+| *anything* | Your custom fields work in templates too |
 
 ## Custom Layouts
 
@@ -153,109 +143,46 @@ Create `_layout.html` in your site root:
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-  <header>
-    <nav>
-      <a href="/">Home</a>
-      <a href="/about.html">About</a>
-      <a href="/posts/">Blog</a>
-    </nav>
-  </header>
+  <nav>
+    <a href="/">Home</a>
+    <a href="/about.html">About</a>
+  </nav>
   <main>
     {{content}}
   </main>
-  <footer>
-    <p>&copy; 2024 My Site</p>
-  </footer>
+  <footer>Built with Gossamer, stubbornness, and caffeine</footer>
 </body>
 </html>
 ```
 
-### Template Variables
-
-| Variable | Description |
-|----------|-------------|
-| `{{content}}` | The rendered HTML content |
-| `{{title}}` | Page title (or "Untitled") |
-| `{{date}}` | Page date (if set) |
-| `{{slug}}` | URL-friendly page name |
-| `{{*}}` | Any front matter field |
-
-Unresolved variables are removed from output.
+Template variables: `{{content}}`, `{{title}}`, `{{date}}`, `{{slug}}`, plus any custom front matter fields.
 
 ### Per-Directory Layouts
 
-You can have different layouts for different sections:
+Different sections can have different looks:
 
 ```
 my-site/
-  _layout.html          <- default layout
+  _layout.html          <- default
   posts/
-    _layout.html        <- posts use this layout
-    hello.md
+    _layout.html        <- blog posts use this
   docs/
-    _layout.html        <- docs use this layout
-    getting-started.md
+    _layout.html        <- docs use this
 ```
 
-Gossamer walks up the directory tree to find the nearest `_layout.html`.
+Gossamer walks up the directory tree to find the nearest `_layout.html`. It's smarter than it looks.
 
 ## Posts
 
-Markdown files in a `posts/` directory are treated as blog posts:
+Files in `posts/` are treated as blog posts:
 
-1. Sorted by date (newest first)
+1. Sorted by date (newest first, like God intended)
 2. Auto-generated index at `/posts/index.html`
-3. Dates can be in filename or front matter
-
-### Example Post
-
-`posts/2024-01-15-hello-world.md`:
-
-```markdown
----
-title: Hello World
----
-
-This is my first post!
-```
-
-Outputs to: `_site/posts/hello-world.html`
-
-## Markdown Features
-
-Gossamer uses [marked](https://marked.js.org/) with GitHub Flavored Markdown (GFM):
-
-- **Bold** and *italic*
-- [Links](https://example.com)
-- `inline code` and code blocks
-- Lists (ordered and unordered)
-- Blockquotes
-- Images
-- Tables (GFM)
-- Task lists (GFM)
-- Strikethrough (GFM)
-
-### Tables Example
-
-```markdown
-| Name  | Role      |
-|-------|-----------|
-| Katie | Developer |
-| Jordan | Designer |
-```
-
-### Code Blocks
-
-````markdown
-```javascript
-const greeting = "Hello, world!";
-console.log(greeting);
-```
-````
+3. Dates can be in filename (`2024-01-15-hello.md`) or front matter
 
 ## Default Theme
 
-Without a custom `_layout.html`, Gossamer uses a beautiful default theme:
+Without a custom layout, Gossamer uses a default theme that's actually good:
 
 - Clean typography optimized for reading
 - Automatic dark mode (follows system preference)
@@ -263,55 +190,37 @@ Without a custom `_layout.html`, Gossamer uses a beautiful default theme:
 - Styled code blocks, tables, blockquotes
 - No JavaScript
 
+You can build an entire blog and never touch CSS. Though you'll probably want to eventually. That's fine.
+
 ## Philosophy
 
-- Markdown in, HTML out
-- Beautiful defaults that work out of the box
-- No configuration required
-- No JavaScript in output (unless you add it)
-- Builds in milliseconds, not seconds
+- Markdown in, HTML out. That's the whole job.
+- Beautiful defaults so you can ship something today.
+- No configuration required. Zero-config is possible when you're not trying to do everything.
+- No JavaScript in output unless you put it there.
+- Builds in milliseconds because life is short.
 
 ## Troubleshooting
 
 ### "Command not found: gossamer"
 
-Make sure you linked the package globally:
-
 ```bash
-cd /path/to/gossamer
-npm link
-```
-
-Or run directly:
-
-```bash
-node /path/to/gossamer/dist/cli.js build
+npm link  # In the gossamer directory
 ```
 
 ### Changes not showing up
 
-The dev server watches for changes, but if something seems stuck:
+The dev server watches for changes, but if it's being stubborn:
 
 1. Stop the server (Ctrl+C)
-2. Delete `_site/` directory
-3. Run `gossamer build` then `gossamer serve`
+2. Delete `_site/`
+3. `gossamer build && gossamer serve`
 
-### Posts not appearing in index
+### Posts not appearing
 
-Posts must be in a `posts/` directory and not marked as draft:
-
-```markdown
----
-draft: true  <- This post won't appear
----
-```
-
-### Layout not being used
-
-Make sure your layout file:
-- Is named `_layout.html` (with underscore)
-- Is in the site root or the page's directory
-- Contains `{{content}}` placeholder
+- Must be in a `posts/` directory
+- Must not have `draft: true` in front matter
+- Must exist (check your file path)
 
 ## License
 

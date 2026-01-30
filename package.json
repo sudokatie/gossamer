@@ -1,11 +1,19 @@
 {
-  "name": "gossamer",
+  "name": "gossamer-ssg",
   "version": "0.1.0",
   "description": "Static site generator that's actually simple",
   "main": "dist/index.js",
   "bin": {
     "gossamer": "dist/cli.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/katieblackabee/gossamer.git"
+  },
+  "bugs": {
+    "url": "https://github.com/katieblackabee/gossamer/issues"
+  },
+  "homepage": "https://github.com/katieblackabee/gossamer#readme",
   "scripts": {
     "build": "tsc",
     "start": "node dist/cli.js",

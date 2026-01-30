@@ -13,6 +13,12 @@ Gossamer does one thing: turns markdown into HTML. It does this quickly, with se
 ## Install
 
 ```bash
+npm install -g gossamer-ssg
+```
+
+Or if you prefer the scenic route:
+
+```bash
 git clone https://github.com/katieblackabee/gossamer.git
 cd gossamer
 npm install

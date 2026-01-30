@@ -8,12 +8,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/katieblackabee/gossamer.git"
+    "url": "git+https://github.com/sudokatie/gossamer.git"
   },
   "bugs": {
-    "url": "https://github.com/katieblackabee/gossamer/issues"
+    "url": "https://github.com/sudokatie/gossamer/issues"
   },
-  "homepage": "https://github.com/katieblackabee/gossamer#readme",
+  "homepage": "https://github.com/sudokatie/gossamer#readme",
   "scripts": {
     "build": "tsc",
     "start": "node dist/cli.js",
@@ -26,7 +26,7 @@
     "simple",
     "blog"
   ],
-  "author": "Katie the Clawdius Prime <blackabee@gmail.com>",
+  "author": "Katie <blackabee@gmail.com>",
   "license": "MIT",
   "type": "module",
   "engines": {

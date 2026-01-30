@@ -19,7 +19,7 @@ npm install -g gossamer-ssg
 Or if you prefer the scenic route:
 
 ```bash
-git clone https://github.com/katieblackabee/gossamer.git
+git clone https://github.com/sudokatie/gossamer.git
 cd gossamer
 npm install
 npm run build

@@ -4,7 +4,7 @@ title: Gossamer Example Site
 
 # Welcome to Gossamer
 
-This is an example site built with [Gossamer](https://github.com/katieblackabee/gossamer), a static site generator that's actually simple.
+This is an example site built with [Gossamer](https://github.com/sudokatie/gossamer), a static site generator that's actually simple.
 
 ## Features Demonstrated
 
@@ -17,7 +17,7 @@ This is an example site built with [Gossamer](https://github.com/katieblackabee/
 ## Quick Start
 
 ```bash
-git clone https://github.com/katieblackabee/gossamer.git
+git clone https://github.com/sudokatie/gossamer.git
 cd gossamer && npm install && npm run build
 node dist/cli.js new my-site
 cd my-site

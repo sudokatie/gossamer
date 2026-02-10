@@ -4,6 +4,7 @@ import { parseMarkdown, extractDateFromFilename } from "./markdown.js";
 import { applyTemplate, loadLayout, loadLayoutForFile } from "./template.js";
 import { isStaticAsset, shouldIgnore, copyAssets } from "./assets.js";
 import { isPost, generatePostsIndex } from "./posts.js";
+import { generateRss, generateAtom } from "./feed.js";
 import type { Page, SiteConfig, BuildResult } from "./types.js";
 
 export async function build(config: SiteConfig): Promise<BuildResult> {
@@ -31,6 +32,16 @@ export async function build(config: SiteConfig): Promise<BuildResult> {
     await fs.mkdir(path.dirname(postsIndexPath), { recursive: true });
     await fs.writeFile(postsIndexPath, postsIndexHtml);
     console.log("  [generated] posts/index.html");
+  }
+  
+  // Generate RSS/Atom feeds if configured
+  if (config.feed && posts.length > 0) {
+    const rss = generateRss(posts, config.feed);
+    const atom = generateAtom(posts, config.feed);
+    
+    await fs.writeFile(path.join(outputDir, "feed.xml"), rss);
+    await fs.writeFile(path.join(outputDir, "atom.xml"), atom);
+    console.log("  [generated] feed.xml, atom.xml");
   }
   
   console.log("Copying assets...");

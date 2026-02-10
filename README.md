@@ -186,6 +186,44 @@ Files in `posts/` are treated as blog posts:
 2. Auto-generated index at `/posts/index.html`
 3. Dates can be in filename (`2024-01-15-hello.md`) or front matter
 
+## RSS/Atom Feeds
+
+Want to let people subscribe to your blog like it's 2005? Pass feed config to enable RSS and Atom generation:
+
+```typescript
+import { build } from "gossamer-ssg";
+
+await build({
+  inputDir: "./content",
+  outputDir: "./_site",
+  feed: {
+    title: "My Blog",
+    baseUrl: "https://example.com",
+    description: "Thoughts nobody asked for",
+    language: "en",
+    limit: 20,  // max posts in feed
+  },
+});
+```
+
+This generates:
+- `feed.xml` - RSS 2.0 feed
+- `atom.xml` - Atom 1.0 feed
+
+Both are standard-compliant and will work with any feed reader that isn't abandonware.
+
+**Feed Config Options:**
+
+| Option | Required | Description |
+|--------|----------|-------------|
+| `title` | Yes | Your blog's name |
+| `baseUrl` | Yes | Full URL with protocol (e.g., `https://example.com`) |
+| `description` | No | What your blog is about |
+| `language` | No | ISO language code (default: `en`) |
+| `limit` | No | Max posts in feed (default: 20) |
+
+Posts use their `description` front matter field for the feed summary. If not provided, the first 280 characters of content are used.
+
 ## Default Theme
 
 Without a custom layout, Gossamer uses a default theme that's actually good:

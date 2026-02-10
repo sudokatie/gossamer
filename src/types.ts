@@ -3,6 +3,7 @@ export interface PageData {
   date?: string;
   draft?: boolean;
   layout?: string;
+  description?: string;
   [key: string]: unknown;
 }
 
@@ -15,10 +16,19 @@ export interface Page {
   data: PageData;
 }
 
+export interface FeedConfig {
+  title: string;
+  baseUrl: string;
+  description?: string;
+  language?: string;
+  limit?: number;
+}
+
 export interface SiteConfig {
   inputDir: string;
   outputDir: string;
   drafts?: boolean;
+  feed?: FeedConfig;
 }
 
 export interface BuildResult {

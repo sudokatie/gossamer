@@ -224,6 +224,28 @@ Both are standard-compliant and will work with any feed reader that isn't abando
 
 Posts use their `description` front matter field for the feed summary. If not provided, the first 280 characters of content are used.
 
+## Sitemap
+
+For SEO purposes, enable sitemap generation:
+
+```typescript
+await build({
+  inputDir: "./content",
+  outputDir: "./_site",
+  sitemap: {
+    baseUrl: "https://example.com",
+  },
+});
+```
+
+This generates `sitemap.xml` with:
+- All pages and posts
+- Last modified dates from front matter
+- Automatic priority assignment (homepage > posts index > posts > nested pages)
+- Change frequency hints
+
+Submit to Google Search Console and pretend like anyone will find your blog.
+
 ## Default Theme
 
 Without a custom layout, Gossamer uses a default theme that's actually good:

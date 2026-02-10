@@ -24,11 +24,16 @@ export interface FeedConfig {
   limit?: number;
 }
 
+export interface SitemapConfig {
+  baseUrl: string;
+}
+
 export interface SiteConfig {
   inputDir: string;
   outputDir: string;
   drafts?: boolean;
   feed?: FeedConfig;
+  sitemap?: SitemapConfig;
 }
 
 export interface BuildResult {

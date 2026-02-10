@@ -5,6 +5,7 @@ import { applyTemplate, loadLayout, loadLayoutForFile } from "./template.js";
 import { isStaticAsset, shouldIgnore, copyAssets } from "./assets.js";
 import { isPost, generatePostsIndex } from "./posts.js";
 import { generateRss, generateAtom } from "./feed.js";
+import { generateSitemap } from "./sitemap.js";
 import type { Page, SiteConfig, BuildResult } from "./types.js";
 
 export async function build(config: SiteConfig): Promise<BuildResult> {
@@ -42,6 +43,13 @@ export async function build(config: SiteConfig): Promise<BuildResult> {
     await fs.writeFile(path.join(outputDir, "feed.xml"), rss);
     await fs.writeFile(path.join(outputDir, "atom.xml"), atom);
     console.log("  [generated] feed.xml, atom.xml");
+  }
+  
+  // Generate sitemap if configured
+  if (config.sitemap && pages.length > 0) {
+    const sitemap = generateSitemap(pages, config.sitemap);
+    await fs.writeFile(path.join(outputDir, "sitemap.xml"), sitemap);
+    console.log("  [generated] sitemap.xml");
   }
   
   console.log("Copying assets...");

@@ -8,7 +8,7 @@ Static site generator that's actually simple. Zero JavaScript by default. Builds
 
 Because Gatsby has 1,847 dependencies. Because Next.js wants to be everything to everyone. Because Hugo's templating language was designed by someone who hates joy.
 
-Gossamer does one thing: turns markdown into HTML. It does this quickly, with sensible defaults, and without requiring a PhD in configuration file syntax.
+Gossamer does one thing: turns markdown into HTML. It does this quickly, with sensible defaults, and without requiring a PhD in configuration file syntax. It also optimizes your images, generates RSS feeds, and creates sitemaps.
 
 ## Install
 
@@ -245,6 +245,47 @@ This generates `sitemap.xml` with:
 - Change frequency hints
 
 Submit to Google Search Console and pretend like anyone will find your blog.
+
+## Image Optimization
+
+Optimize images during build for faster page loads:
+
+```typescript
+import { optimizeImages, calculateSavings } from "gossamer-ssg";
+
+// Optimize all images in a directory
+const results = await optimizeImages("./content", "./_site", {
+  maxWidth: 1920,         // Resize larger images
+  jpegQuality: 80,        // 1-100
+  pngCompression: 9,      // 0-9
+  generateWebp: true,     // Create .webp versions
+  responsiveSizes: [640, 960, 1280],  // Generate srcset variants
+});
+
+// See what you saved
+const savings = calculateSavings(results);
+console.log(`Saved ${(savings.savedPercent).toFixed(1)}% (${savings.savedBytes} bytes)`);
+```
+
+**Features:**
+- Resize images larger than maxWidth (preserving aspect ratio)
+- JPEG compression with mozjpeg
+- PNG compression
+- Automatic WebP generation for modern browsers
+- Responsive image variants for srcset
+- Recursive directory processing
+- Skips hidden files and corrupted images
+
+**Default Config:**
+| Option | Default | Description |
+|--------|---------|-------------|
+| `maxWidth` | 1920 | Maximum width in pixels |
+| `maxHeight` | 0 | Maximum height (0 = no limit) |
+| `jpegQuality` | 80 | JPEG quality 1-100 |
+| `pngCompression` | 9 | PNG compression 0-9 |
+| `webpQuality` | 80 | WebP quality 1-100 |
+| `generateWebp` | true | Create .webp versions |
+| `responsiveSizes` | [640, 960, 1280] | Widths for responsive variants |
 
 ## Default Theme
 

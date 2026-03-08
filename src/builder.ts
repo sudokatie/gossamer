@@ -1,12 +1,12 @@
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import { parseMarkdown, extractDateFromFilename } from "./markdown.js";
-import { applyTemplate, loadLayout, loadLayoutForFile } from "./template.js";
+import { applyTemplate, loadLayout, loadLayoutForFile, type TemplateOptions } from "./template.js";
 import { isStaticAsset, shouldIgnore, copyAssets } from "./assets.js";
 import { isPost, generatePostsIndex } from "./posts.js";
 import { generateRss, generateAtom } from "./feed.js";
 import { generateSitemap } from "./sitemap.js";
-import type { Page, SiteConfig, BuildResult } from "./types.js";
+import type { Page, SiteConfig, BuildResult, FeedConfig } from "./types.js";
 
 export async function build(config: SiteConfig): Promise<BuildResult> {
   const startTime = performance.now();
@@ -21,7 +21,7 @@ export async function build(config: SiteConfig): Promise<BuildResult> {
   const layout = await loadLayout(inputDir);
   const pages: Page[] = [];
   
-  await processDirectory(inputDir, inputDir, outputDir, layout, pages, errors, config.drafts);
+  await processDirectory(inputDir, inputDir, outputDir, layout, pages, errors, config.drafts, config.feed);
   
   const posts = pages.filter(p => isPost(p) && !p.sourcePath.endsWith("_index.md"));
   const customPostsIndex = pages.find(p => p.sourcePath === "posts/_index.md" || p.sourcePath.endsWith("/posts/_index.md"));
@@ -73,6 +73,7 @@ async function processDirectory(
   pages: Page[],
   errors: string[],
   includeDrafts?: boolean,
+  feedConfig?: FeedConfig,
 ): Promise<void> {
   let entries;
   try {
@@ -93,10 +94,10 @@ async function processDirectory(
     if (entry.isDirectory()) {
       const outDir = path.join(outputRoot, relativePath);
       await fs.mkdir(outDir, { recursive: true });
-      await processDirectory(sourcePath, inputRoot, outputRoot, rootLayout, pages, errors, includeDrafts);
+      await processDirectory(sourcePath, inputRoot, outputRoot, rootLayout, pages, errors, includeDrafts, feedConfig);
     } else if (entry.name.endsWith(".md")) {
       try {
-        const page = await processMarkdownFile(sourcePath, relativePath, inputRoot, outputRoot, rootLayout, includeDrafts);
+        const page = await processMarkdownFile(sourcePath, relativePath, inputRoot, outputRoot, rootLayout, includeDrafts, feedConfig);
         
         if (!page) {
           console.log(`  [skipped draft] ${relativePath}`);
@@ -121,6 +122,7 @@ async function processMarkdownFile(
   outputRoot: string,
   rootLayout: string,
   includeDrafts?: boolean,
+  feedConfig?: FeedConfig,
 ): Promise<Page | null> {
   const content = await fs.readFile(sourcePath, "utf-8");
   const parsed = parseMarkdown(content, relativePath);
@@ -160,7 +162,8 @@ async function processMarkdownFile(
     outputPath: outputRelative,
   };
   
-  const html = applyTemplate(page, layout);
+  const templateOptions: TemplateOptions = { feedConfig };
+  const html = applyTemplate(page, layout, templateOptions);
   
   await fs.mkdir(path.dirname(outputPath), { recursive: true });
   await fs.writeFile(outputPath, html);

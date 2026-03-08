@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import * as assert from "node:assert";
-import { generateRss, generateAtom } from "./feed.js";
+import { generateRss, generateAtom, generateFeedDiscoveryLinks } from "./feed.js";
 import type { Page, FeedConfig } from "./types.js";
 
 const mockPosts: Page[] = [
@@ -138,6 +138,46 @@ describe("feed", () => {
       const atom = generateAtom(mockPosts, mockConfig);
 
       assert.ok(atom.includes('href="https://example.com/atom.xml" rel="self"'));
+    });
+  });
+
+  describe("generateFeedDiscoveryLinks", () => {
+    it("generates RSS link tag", () => {
+      const links = generateFeedDiscoveryLinks(mockConfig);
+
+      assert.ok(links.includes('rel="alternate"'));
+      assert.ok(links.includes('type="application/rss+xml"'));
+      assert.ok(links.includes('href="https://example.com/feed.xml"'));
+    });
+
+    it("generates Atom link tag", () => {
+      const links = generateFeedDiscoveryLinks(mockConfig);
+
+      assert.ok(links.includes('type="application/atom+xml"'));
+      assert.ok(links.includes('href="https://example.com/atom.xml"'));
+    });
+
+    it("includes feed title in link tags", () => {
+      const links = generateFeedDiscoveryLinks(mockConfig);
+
+      assert.ok(links.includes('title="Test Blog"'));
+    });
+
+    it("strips trailing slash from baseUrl", () => {
+      const config = { ...mockConfig, baseUrl: "https://example.com/" };
+      const links = generateFeedDiscoveryLinks(config);
+
+      assert.ok(links.includes('href="https://example.com/feed.xml"'));
+      assert.ok(!links.includes("//feed.xml"));
+    });
+
+    it("escapes HTML special characters in title", () => {
+      const config = { ...mockConfig, title: 'Blog with "quotes" & <tags>' };
+      const links = generateFeedDiscoveryLinks(config);
+
+      assert.ok(links.includes("&quot;quotes&quot;"));
+      assert.ok(links.includes("&amp;"));
+      assert.ok(links.includes("&lt;tags&gt;"));
     });
   });
 });

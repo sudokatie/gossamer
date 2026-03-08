@@ -1,6 +1,26 @@
 import type { Page, FeedConfig } from "./types.js";
 import { sortPosts } from "./posts.js";
 
+/**
+ * Generate HTML link tags for feed discovery.
+ * These should be placed in the <head> of HTML documents.
+ */
+export function generateFeedDiscoveryLinks(config: FeedConfig): string {
+  const baseUrl = config.baseUrl.replace(/\/$/, "");
+  const title = escapeHtml(config.title);
+  
+  return `<link rel="alternate" type="application/rss+xml" title="${title}" href="${baseUrl}/feed.xml">
+  <link rel="alternate" type="application/atom+xml" title="${title}" href="${baseUrl}/atom.xml">`;
+}
+
+const escapeHtml = (str: string): string => {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+};
+
 const escapeXml = (str: string): string => {
   return str
     .replace(/&/g, "&amp;")

@@ -1,7 +1,8 @@
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
-import type { Page } from "./types.js";
+import type { Page, FeedConfig } from "./types.js";
+import { generateFeedDiscoveryLinks } from "./feed.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -81,7 +82,11 @@ export async function loadLayoutForFile(
   return rootLayout;
 }
 
-export function applyTemplate(page: Page, layout: string): string {
+export interface TemplateOptions {
+  feedConfig?: FeedConfig;
+}
+
+export function applyTemplate(page: Page, layout: string, options?: TemplateOptions): string {
   let result = layout;
   
   result = result.replace(/\{\{content\}\}/g, page.html);
@@ -89,6 +94,19 @@ export function applyTemplate(page: Page, layout: string): string {
   
   if (page.data.date) {
     result = result.replace(/\{\{date\}\}/g, page.data.date);
+  }
+  
+  // Inject feed discovery links if configured
+  if (options?.feedConfig) {
+    const feedLinks = generateFeedDiscoveryLinks(options.feedConfig);
+    result = result.replace(/\{\{feed_links\}\}/g, feedLinks);
+    
+    // Also inject before </head> if {{feed_links}} not present
+    if (!layout.includes("{{feed_links}}") && result.includes("</head>")) {
+      result = result.replace("</head>", `  ${feedLinks}\n</head>`);
+    }
+  } else {
+    result = result.replace(/\{\{feed_links\}\}/g, "");
   }
   
   for (const [key, value] of Object.entries(page.data)) {

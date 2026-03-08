@@ -212,6 +212,17 @@ This generates:
 
 Both are standard-compliant and will work with any feed reader that isn't abandonware.
 
+### Feed Discovery
+
+When feeds are enabled, Gossamer automatically injects feed discovery `<link>` tags into every HTML page:
+
+```html
+<link rel="alternate" type="application/rss+xml" title="My Blog" href="https://example.com/feed.xml">
+<link rel="alternate" type="application/atom+xml" title="My Blog" href="https://example.com/atom.xml">
+```
+
+This lets browsers and feed readers auto-discover your feeds without users having to hunt for the feed URL. If you use a custom layout, you can place `{{feed_links}}` in your `<head>` to control where they appear, or omit it and let Gossamer inject them before `</head>`.
+
 **Feed Config Options:**
 
 | Option | Required | Description |

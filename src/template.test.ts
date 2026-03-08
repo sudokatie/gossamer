@@ -4,7 +4,7 @@ import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import * as os from "node:os";
 import { loadLayout, loadLayoutForFile, applyTemplate, getDefaultLayout } from "./template.js";
-import type { Page } from "./types.js";
+import type { Page, FeedConfig } from "./types.js";
 
 describe("loadLayout", () => {
   let tempDir: string;
@@ -180,6 +180,70 @@ describe("applyTemplate", () => {
     const result = applyTemplate(page, layout);
     
     assert.strictEqual(result, "<title>Untitled</title>");
+  });
+
+  it("replaces feed_links placeholder when feedConfig provided", () => {
+    const page: Page = {
+      sourcePath: "test.md",
+      outputPath: "test.html",
+      slug: "test",
+      content: "",
+      html: "",
+      data: { title: "Test" },
+    };
+    const feedConfig: FeedConfig = {
+      title: "My Blog",
+      baseUrl: "https://example.com",
+    };
+    const layout = "<head>{{feed_links}}</head>";
+    
+    const result = applyTemplate(page, layout, { feedConfig });
+    
+    assert.ok(result.includes('type="application/rss+xml"'));
+    assert.ok(result.includes('type="application/atom+xml"'));
+    assert.ok(result.includes("https://example.com/feed.xml"));
+    assert.ok(result.includes("https://example.com/atom.xml"));
+  });
+
+  it("injects feed links before </head> if no placeholder", () => {
+    const page: Page = {
+      sourcePath: "test.md",
+      outputPath: "test.html",
+      slug: "test",
+      content: "",
+      html: "",
+      data: { title: "Test" },
+    };
+    const feedConfig: FeedConfig = {
+      title: "My Blog",
+      baseUrl: "https://example.com",
+    };
+    const layout = "<head><title>Test</title></head><body></body>";
+    
+    const result = applyTemplate(page, layout, { feedConfig });
+    
+    assert.ok(result.includes('type="application/rss+xml"'));
+    assert.ok(result.includes("</head>"));
+    // Feed links should appear before </head>
+    const feedIndex = result.indexOf("application/rss+xml");
+    const headIndex = result.indexOf("</head>");
+    assert.ok(feedIndex < headIndex, "Feed links should appear before </head>");
+  });
+
+  it("removes feed_links placeholder when no feedConfig", () => {
+    const page: Page = {
+      sourcePath: "test.md",
+      outputPath: "test.html",
+      slug: "test",
+      content: "",
+      html: "",
+      data: { title: "Test" },
+    };
+    const layout = "<head>{{feed_links}}</head>";
+    
+    const result = applyTemplate(page, layout);
+    
+    assert.strictEqual(result, "<head></head>");
   });
 });
 

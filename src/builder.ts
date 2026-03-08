@@ -6,6 +6,7 @@ import { isStaticAsset, shouldIgnore, copyAssets } from "./assets.js";
 import { isPost, generatePostsIndex } from "./posts.js";
 import { generateRss, generateAtom } from "./feed.js";
 import { generateSitemap } from "./sitemap.js";
+import { generateSearchIndexJson, generateSearchScript } from "./search.js";
 import type { Page, SiteConfig, BuildResult, FeedConfig } from "./types.js";
 
 export async function build(config: SiteConfig): Promise<BuildResult> {
@@ -50,6 +51,15 @@ export async function build(config: SiteConfig): Promise<BuildResult> {
     const sitemap = generateSitemap(pages, config.sitemap);
     await fs.writeFile(path.join(outputDir, "sitemap.xml"), sitemap);
     console.log("  [generated] sitemap.xml");
+  }
+  
+  // Generate search index if configured
+  if (config.search && pages.length > 0) {
+    const searchIndex = generateSearchIndexJson(pages, config.search);
+    const searchScript = generateSearchScript();
+    await fs.writeFile(path.join(outputDir, "search-index.json"), searchIndex);
+    await fs.writeFile(path.join(outputDir, "search.js"), searchScript);
+    console.log("  [generated] search-index.json, search.js");
   }
   
   console.log("Copying assets...");

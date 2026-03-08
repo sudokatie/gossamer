@@ -28,12 +28,18 @@ export interface SitemapConfig {
   baseUrl: string;
 }
 
+export interface SearchConfig {
+  baseUrl: string;
+  fields?: ("title" | "content" | "description")[];
+}
+
 export interface SiteConfig {
   inputDir: string;
   outputDir: string;
   drafts?: boolean;
   feed?: FeedConfig;
   sitemap?: SitemapConfig;
+  search?: SearchConfig;
 }
 
 export interface BuildResult {

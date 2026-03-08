@@ -257,6 +257,76 @@ This generates `sitemap.xml` with:
 
 Submit to Google Search Console and pretend like anyone will find your blog.
 
+## Search
+
+Add client-side search to your static site without any backend:
+
+```typescript
+await build({
+  inputDir: "./content",
+  outputDir: "./_site",
+  search: {
+    baseUrl: "https://example.com",
+    fields: ["title", "content", "description"],  // optional, all three by default
+  },
+});
+```
+
+This generates:
+- `search-index.json` - Inverted index of all your content
+- `search.js` - Lightweight search script (~2KB)
+
+### Adding Search to Your Site
+
+Create a search page (e.g., `search.md`):
+
+```markdown
+---
+title: Search
+---
+
+<form data-search-form>
+  <input type="search" data-search-input placeholder="Search..." aria-label="Search">
+</form>
+
+<div data-search-results></div>
+
+<script src="/search.js"></script>
+```
+
+Or use the programmatic helper:
+
+```typescript
+import { generateSearchPage } from "gossamer-ssg";
+
+const searchPageContent = generateSearchPage("Search My Site");
+// Returns markdown with search form, results container, and script tag
+```
+
+### How It Works
+
+1. During build, content is tokenized and indexed
+2. The index maps terms to document IDs for fast lookup
+3. On the client, queries are tokenized and matched against the index
+4. Results are ranked by number of matching terms
+5. Top 10 results are displayed with links
+
+**Search Config Options:**
+
+| Option | Required | Description |
+|--------|----------|-------------|
+| `baseUrl` | Yes | Full URL for generating result links |
+| `fields` | No | Which fields to index (default: all three) |
+
+The search is instant because the entire index loads client-side. For small to medium sites (<1000 pages), this is faster than any server-based search. For huge sites, you probably need something else.
+
+**Features:**
+- Instant results as you type (debounced)
+- Searches title, content, and description fields
+- Removes common stop words ("the", "and", etc.)
+- Case-insensitive matching
+- No external dependencies
+
 ## Image Optimization
 
 Optimize images during build for faster page loads:

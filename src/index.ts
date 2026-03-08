@@ -14,5 +14,17 @@ export {
   calculateSavings,
   defaultImageConfig,
 } from "./images.js";
-export type { Page, PageData, SiteConfig, ServerConfig, BuildResult } from "./types.js";
+export {
+  tokenize,
+  removeStopWords,
+  stripHtml,
+  createSearchDocument,
+  buildInvertedIndex,
+  generateSearchIndex,
+  generateSearchIndexJson,
+  generateSearchScript,
+  generateSearchPage,
+} from "./search.js";
+export type { Page, PageData, SiteConfig, ServerConfig, BuildResult, SearchConfig } from "./types.js";
 export type { ImageConfig, OptimizedImage, ResponsiveVariant } from "./images.js";
+export type { SearchDocument, SearchIndex } from "./search.js";
